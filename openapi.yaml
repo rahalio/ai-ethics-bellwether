@@ -1,0 +1,2226 @@
+openapi: 3.0.3
+info:
+  title: Bellwether
+  version: 0.1.0
+  description: >-
+    Board-level radar for disruptive technology decisions. Scores exposure across
+    commoditisation, consent, displacement, bias and inclusion, and accessibility;
+    records necessary versus unnecessary harms, mitigations, acceptances and the
+    short-term sacrifice the board accepted.
+  x-product-slug: ai-ethics-bellwether
+  x-source: ai-in-ethics/deloitte-ethics-in-the-age-of-disruption/
+servers:
+  - url: https://api.example.com
+tags:
+  - name: Decisions
+    description: Technology decisions, materiality and options
+  - name: Harm Assessment
+    description: Per-domain harm itemisation and classification
+  - name: Exposure
+    description: Continuous exposure scores by domain and stakeholder group
+  - name: Sacrifice Ledger
+    description: Short-term sacrifices and horizon reviews
+  - name: Consent Adequacy
+    description: Comprehension evidence and unconsented uses
+  - name: Displacement
+    description: Transition plans and consultation records
+  - name: Access & Equity
+    description: Distributional assessments and access commitments
+  - name: Policy Posture
+    description: Stated positions and lead-match-trail assessment
+  - name: Engagement
+    description: Multi-stakeholder engagements and outcomes
+  - name: Conscience Channel
+    description: Compartmented reports of commercial pressure overriding ethics
+  - name: Trust
+    description: Per-group trust and comprehension measures
+  - name: Board Record
+    description: Append-only decisions, dissent and delegated authorities
+paths:
+  /v1/decisions:
+    get:
+      operationId: listTechnologyDecisions
+      tags: [Decisions]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, assessing, ready_for_committee, approved, rejected, proceeded_without_assessment]
+      responses:
+        "200":
+          description: Technology decisions page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeTechnologyDecision"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: registerTechnologyDecision
+      tags: [Decisions]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TechnologyDecisionCreate"
+      responses:
+        "201":
+          description: Decision registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeTechnologyDecision"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+  /v1/decisions/{decisionId}:
+    parameters:
+      - $ref: "#/components/parameters/DecisionId"
+    get:
+      operationId: getTechnologyDecision
+      tags: [Decisions]
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Technology decision
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeTechnologyDecision"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /v1/decisions/{decisionId}/materiality:
+    parameters:
+      - $ref: "#/components/parameters/DecisionId"
+    post:
+      operationId: assessMateriality
+      tags: [Decisions]
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaterialityAssessment"
+      responses:
+        "200":
+          description: Materiality assessment recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeMaterialityAssessment"
+  /v1/decisions/{decisionId}/options:
+    parameters:
+      - $ref: "#/components/parameters/DecisionId"
+    post:
+      operationId: addDecisionOption
+      tags: [Decisions]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DecisionOption"
+      responses:
+        "201":
+          description: Alternative option recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeDecisionOption"
+  /v1/decisions/{decisionId}/harm-assessments:
+    parameters:
+      - $ref: "#/components/parameters/DecisionId"
+    get:
+      operationId: listHarmAssessments
+      tags: [Harm Assessment]
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Harm assessments for the decision
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeHarmAssessment"
+    post:
+      operationId: createHarmAssessment
+      tags: [Harm Assessment]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HarmAssessmentCreate"
+      responses:
+        "201":
+          description: Harm assessment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeHarmAssessment"
+  /v1/harm-items/{harmItemId}/classify:
+    parameters:
+      - $ref: "#/components/parameters/HarmItemId"
+    post:
+      operationId: classifyHarmItem
+      tags: [Harm Assessment]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [classification, rationale]
+              properties:
+                classification:
+                  type: string
+                  enum: [necessary, unnecessary]
+                rationale:
+                  type: string
+                contested:
+                  type: boolean
+      responses:
+        "200":
+          description: Harm classification recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeHarmItem"
+  /v1/harm-items/{harmItemId}/mitigations:
+    parameters:
+      - $ref: "#/components/parameters/HarmItemId"
+    post:
+      operationId: assignMitigation
+      tags: [Harm Assessment]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Mitigation"
+      responses:
+        "201":
+          description: Mitigation assigned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeMitigation"
+  /v1/harm-items/{harmItemId}/acceptances:
+    parameters:
+      - $ref: "#/components/parameters/HarmItemId"
+    post:
+      operationId: acceptHarm
+      tags: [Harm Assessment]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HarmAcceptance"
+      responses:
+        "201":
+          description: Harm acceptance recorded by named executive
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeHarmAcceptance"
+  /v1/exposure-scores:
+    get:
+      operationId: listExposureScores
+      tags: [Exposure]
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+        - name: domain
+          in: query
+          schema:
+            $ref: "#/components/schemas/ExposureDomain"
+        - name: stakeholderGroupId
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Exposure scores page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeExposureScore"
+  /v1/sacrifice-ledger:
+    get:
+      operationId: listSacrificeLedgerEntries
+      tags: [Sacrifice Ledger]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+        - name: horizonStatus
+          in: query
+          schema:
+            type: string
+            enum: [pending, due, evidenced, not_evidenced]
+      responses:
+        "200":
+          description: Sacrifice ledger page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeSacrificeLedgerEntry"
+    post:
+      operationId: recordSacrifice
+      tags: [Sacrifice Ledger]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SacrificeLedgerEntryCreate"
+      responses:
+        "201":
+          description: Sacrifice recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeSacrificeLedgerEntry"
+  /v1/sacrifice-ledger/{entryId}/horizon-reviews:
+    parameters:
+      - $ref: "#/components/parameters/SacrificeEntryId"
+    post:
+      operationId: recordHorizonReview
+      tags: [Sacrifice Ledger]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HorizonReview"
+      responses:
+        "201":
+          description: Horizon review recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeHorizonReview"
+  /v1/consent-adequacy:
+    get:
+      operationId: listConsentAdequacyMeasures
+      tags: [Consent Adequacy]
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Consent adequacy measures
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeConsentAdequacyMeasure"
+    post:
+      operationId: recordConsentAdequacy
+      tags: [Consent Adequacy]
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsentAdequacyMeasure"
+      responses:
+        "201":
+          description: Consent adequacy measure recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeConsentAdequacyMeasure"
+  /v1/unconsented-uses:
+    get:
+      operationId: listUnconsentedUses
+      tags: [Consent Adequacy]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, decided, remediating]
+      responses:
+        "200":
+          description: Unconsented uses page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeUnconsentedUse"
+  /v1/displacement-plans:
+    get:
+      operationId: listDisplacementPlans
+      tags: [Displacement]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Displacement plans page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeDisplacementPlan"
+    post:
+      operationId: createDisplacementPlan
+      tags: [Displacement]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DisplacementPlanCreate"
+      responses:
+        "201":
+          description: Displacement plan created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeDisplacementPlan"
+  /v1/displacement-plans/{planId}/consultations:
+    parameters:
+      - $ref: "#/components/parameters/DisplacementPlanId"
+    post:
+      operationId: recordConsultation
+      tags: [Displacement]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsultationRecord"
+      responses:
+        "201":
+          description: Consultation recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeConsultationRecord"
+  /v1/distributional-assessments:
+    post:
+      operationId: createDistributionalAssessment
+      tags: [Access & Equity]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DistributionalAssessment"
+      responses:
+        "201":
+          description: Distributional assessment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeDistributionalAssessment"
+  /v1/access-commitments:
+    get:
+      operationId: listAccessCommitments
+      tags: [Access & Equity]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Access commitments page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeAccessCommitment"
+    post:
+      operationId: createAccessCommitment
+      tags: [Access & Equity]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccessCommitment"
+      responses:
+        "201":
+          description: Access commitment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeAccessCommitment"
+  /v1/policy-positions:
+    get:
+      operationId: listPolicyPositions
+      tags: [Policy Posture]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+        - name: domain
+          in: query
+          schema:
+            $ref: "#/components/schemas/ExposureDomain"
+      responses:
+        "200":
+          description: Policy positions page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopePolicyPosition"
+    post:
+      operationId: adoptPolicyPosition
+      tags: [Policy Posture]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PolicyPositionCreate"
+      responses:
+        "201":
+          description: Policy position adopted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopePolicyPosition"
+  /v1/policy-positions/{positionId}/lead-lag:
+    parameters:
+      - $ref: "#/components/parameters/PolicyPositionId"
+    post:
+      operationId: assessRegulatoryLeadLag
+      tags: [Policy Posture]
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegulatoryLeadLagAssessment"
+      responses:
+        "200":
+          description: Lead-match-trail assessment recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeRegulatoryLeadLagAssessment"
+  /v1/engagements:
+    get:
+      operationId: listStakeholderEngagements
+      tags: [Engagement]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Engagements page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeStakeholderEngagement"
+    post:
+      operationId: recordStakeholderEngagement
+      tags: [Engagement]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StakeholderEngagementCreate"
+      responses:
+        "201":
+          description: Engagement recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeStakeholderEngagement"
+  /v1/engagements/{engagementId}/outcomes:
+    parameters:
+      - $ref: "#/components/parameters/EngagementId"
+    post:
+      operationId: recordEngagementOutcome
+      tags: [Engagement]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EngagementOutcome"
+      responses:
+        "201":
+          description: What was heard and what changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeEngagementOutcome"
+  /v1/conscience-reports:
+    get:
+      operationId: listConscienceReports
+      tags: [Conscience Channel]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [received, routed, under_review, closed]
+      responses:
+        "200":
+          description: Conscience reports page (committee and intake roles only)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeConscienceReport"
+    post:
+      operationId: submitConscienceReport
+      tags: [Conscience Channel]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConscienceReportCreate"
+      responses:
+        "201":
+          description: Report accepted into compartmented channel
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeConscienceReport"
+  /v1/conscience-reports/{reportId}/outcome:
+    parameters:
+      - $ref: "#/components/parameters/ConscienceReportId"
+    post:
+      operationId: recordConscienceOutcome
+      tags: [Conscience Channel]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [outcome, reporterProtectionEvidenced]
+              properties:
+                outcome:
+                  type: string
+                reporterProtectionEvidenced:
+                  type: boolean
+      responses:
+        "200":
+          description: Outcome recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeConscienceReport"
+  /v1/trust-measures:
+    get:
+      operationId: listTrustMeasures
+      tags: [Trust]
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+        - name: stakeholderGroupId
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Trust measures page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeTrustMeasure"
+    post:
+      operationId: captureTrustMeasure
+      tags: [Trust]
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TrustMeasure"
+      responses:
+        "201":
+          description: Trust measure captured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeTrustMeasure"
+  /v1/board-records:
+    get:
+      operationId: listBoardDecisionRecords
+      tags: [Board Record]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+        - name: asOf
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: Append-only board records
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeBoardDecisionRecord"
+    post:
+      operationId: appendBoardDecisionRecord
+      tags: [Board Record]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BoardDecisionRecordCreate"
+      responses:
+        "201":
+          description: Board record appended
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeBoardDecisionRecord"
+  /v1/board-records/{recordId}/dissent:
+    parameters:
+      - $ref: "#/components/parameters/BoardRecordId"
+    post:
+      operationId: recordDissent
+      tags: [Board Record]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DissentRecord"
+      responses:
+        "201":
+          description: Dissent recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeDissentRecord"
+  /v1/delegated-authorities:
+    get:
+      operationId: listDelegatedAuthorities
+      tags: [Board Record]
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Delegated authorities
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeDelegatedAuthority"
+    post:
+      operationId: grantDelegatedAuthority
+      tags: [Board Record]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DelegatedAuthority"
+      responses:
+        "201":
+          description: Delegated authority granted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeDelegatedAuthority"
+  /v1/stakeholder-groups:
+    get:
+      operationId: listStakeholderGroups
+      tags: [Exposure]
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Stakeholder groups
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeStakeholderGroup"
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Cursor:
+      name: cursor
+      in: query
+      schema:
+        type: string
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 200
+        default: 50
+    DecisionId:
+      name: decisionId
+      in: path
+      required: true
+      schema:
+        type: string
+    HarmItemId:
+      name: harmItemId
+      in: path
+      required: true
+      schema:
+        type: string
+    SacrificeEntryId:
+      name: entryId
+      in: path
+      required: true
+      schema:
+        type: string
+    DisplacementPlanId:
+      name: planId
+      in: path
+      required: true
+      schema:
+        type: string
+    PolicyPositionId:
+      name: positionId
+      in: path
+      required: true
+      schema:
+        type: string
+    EngagementId:
+      name: engagementId
+      in: path
+      required: true
+      schema:
+        type: string
+    ConscienceReportId:
+      name: reportId
+      in: path
+      required: true
+      schema:
+        type: string
+    BoardRecordId:
+      name: recordId
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    Unauthorized:
+      description: Missing or invalid credentials
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    UnprocessableEntity:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+  schemas:
+    ResponseMeta:
+      type: object
+      required: [requestId, timestamp]
+      properties:
+        requestId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+
+    ExposureDomain:
+      type: string
+      enum:
+        - commoditisation_of_human_experience
+        - consent_and_privacy
+        - worker_displacement
+        - bias_and_inclusion
+        - accessibility_and_inequality
+    TechnologyDecisionCreate:
+      type: object
+      required: [title, proposingUnitId, summary]
+      properties:
+        title:
+          type: string
+        proposingUnitId:
+          type: string
+        summary:
+          type: string
+        capitalCommitted:
+          type: number
+        employeesAffected:
+          type: integer
+        customersAffected:
+          type: integer
+        adoptionPace:
+          type: string
+          enum: [incremental, full_scale]
+    TechnologyDecision:
+      type: object
+      required: [id, title, status]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        proposingUnitId:
+          type: string
+        summary:
+          type: string
+        status:
+          type: string
+          enum: [draft, assessing, ready_for_committee, approved, rejected, proceeded_without_assessment]
+        capitalCommitted:
+          type: number
+        employeesAffected:
+          type: integer
+        customersAffected:
+          type: integer
+        adoptionPace:
+          type: string
+          enum: [incremental, full_scale]
+        materialityCrossed:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+    DecisionOption:
+      type: object
+      required: [description]
+      properties:
+        id:
+          type: string
+        decisionId:
+          type: string
+        description:
+          type: string
+        selected:
+          type: boolean
+        rejectedReason:
+          type: string
+    MaterialityAssessment:
+      type: object
+      required: [capitalThresholdBreached, headcountThresholdBreached, customerThresholdBreached]
+      properties:
+        id:
+          type: string
+        decisionId:
+          type: string
+        capitalThresholdBreached:
+          type: boolean
+        headcountThresholdBreached:
+          type: boolean
+        customerThresholdBreached:
+          type: boolean
+        inScope:
+          type: boolean
+        assessedAt:
+          type: string
+          format: date-time
+        assessedBy:
+          type: string
+    HarmAssessmentCreate:
+      type: object
+      required: [domain, definitionOfHarmBasis, stakeholderGroupIds]
+      properties:
+        domain:
+          $ref: "#/components/schemas/ExposureDomain"
+        definitionOfHarmBasis:
+          $ref: "#/components/schemas/DefinitionOfHarmBasis"
+        stakeholderGroupIds:
+          type: array
+          items:
+            type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/HarmItemInput"
+    HarmAssessment:
+      type: object
+      required: [id, decisionId, domain, status]
+      properties:
+        id:
+          type: string
+        decisionId:
+          type: string
+        domain:
+          $ref: "#/components/schemas/ExposureDomain"
+        status:
+          type: string
+          enum: [draft, complete, contested]
+        definitionOfHarmBasis:
+          $ref: "#/components/schemas/DefinitionOfHarmBasis"
+        stakeholderGroupIds:
+          type: array
+          items:
+            type: string
+        harmItemIds:
+          type: array
+          items:
+            type: string
+    DefinitionOfHarmBasis:
+      type: object
+      required: [whoseDefinition, consultedGroupIds]
+      properties:
+        whoseDefinition:
+          type: string
+        geographicLens:
+          type: string
+        culturalLens:
+          type: string
+        consultedGroupIds:
+          type: array
+          items:
+            type: string
+    HarmItemInput:
+      type: object
+      required: [description]
+      properties:
+        description:
+          type: string
+        affectedGroupIds:
+          type: array
+          items:
+            type: string
+        proposedClassification:
+          type: string
+          enum: [necessary, unnecessary]
+    HarmItem:
+      type: object
+      required: [id, assessmentId, description, classification]
+      properties:
+        id:
+          type: string
+        assessmentId:
+          type: string
+        description:
+          type: string
+        classification:
+          type: string
+          enum: [necessary, unnecessary, unclassified]
+        contested:
+          type: boolean
+        adjudicationOutcome:
+          type: string
+        affectedGroupIds:
+          type: array
+          items:
+            type: string
+    Mitigation:
+      type: object
+      required: [description, ownerId]
+      properties:
+        id:
+          type: string
+        harmItemId:
+          type: string
+        description:
+          type: string
+        ownerId:
+          type: string
+        status:
+          type: string
+          enum: [assigned, accepted, completed]
+        dueDate:
+          type: string
+          format: date
+    HarmAcceptance:
+      type: object
+      required: [acceptingExecutiveId, rationale]
+      properties:
+        id:
+          type: string
+        harmItemId:
+          type: string
+        acceptingExecutiveId:
+          type: string
+        rationale:
+          type: string
+        expiryDate:
+          type: string
+          format: date
+        acceptedAt:
+          type: string
+          format: date-time
+    StakeholderGroup:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+          enum: [employees, customers, community, under_represented, regulators, civil_society]
+    ExposureScore:
+      type: object
+      required: [id, domain, stakeholderGroupId, score]
+      properties:
+        id:
+          type: string
+        domain:
+          $ref: "#/components/schemas/ExposureDomain"
+        stakeholderGroupId:
+          type: string
+        score:
+          type: number
+          format: float
+        priorScore:
+          type: number
+          format: float
+        drivers:
+          type: array
+          items:
+            type: string
+        asOf:
+          type: string
+          format: date-time
+    SacrificeLedgerEntryCreate:
+      type: object
+      required: [decisionId, shortTermCostDescription, expectedLongTermBenefit, horizonDate]
+      properties:
+        decisionId:
+          type: string
+        shortTermCostDescription:
+          type: string
+        quantifiedCost:
+          type: number
+        currency:
+          type: string
+        expectedLongTermBenefit:
+          type: string
+        horizonDate:
+          type: string
+          format: date
+    SacrificeLedgerEntry:
+      type: object
+      required: [id, decisionId, horizonDate, status]
+      properties:
+        id:
+          type: string
+        decisionId:
+          type: string
+        shortTermCostDescription:
+          type: string
+        quantifiedCost:
+          type: number
+        currency:
+          type: string
+        expectedLongTermBenefit:
+          type: string
+        horizonDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [pending, due, evidenced, not_evidenced]
+    HorizonReview:
+      type: object
+      required: [benefitMaterialised, evidence]
+      properties:
+        id:
+          type: string
+        sacrificeEntryId:
+          type: string
+        benefitMaterialised:
+          type: boolean
+        evidence:
+          type: string
+        reviewedAt:
+          type: string
+          format: date-time
+        reviewedBy:
+          type: string
+    ConsentAdequacyMeasure:
+      type: object
+      required: [dataUseId, comprehensionScore]
+      properties:
+        id:
+          type: string
+        dataUseId:
+          type: string
+        agreementId:
+          type: string
+        comprehensionScore:
+          type: number
+          format: float
+        method:
+          type: string
+        measuredAt:
+          type: string
+          format: date-time
+    UnconsentedUse:
+      type: object
+      required: [id, dataUseDescription, status]
+      properties:
+        id:
+          type: string
+        dataUseDescription:
+          type: string
+        sourceAgreementId:
+          type: string
+        status:
+          type: string
+          enum: [open, decided, remediating]
+        decisionId:
+          type: string
+        disposition:
+          type: string
+    DisplacementPlanCreate:
+      type: object
+      required: [decisionId, rolesAffected]
+      properties:
+        decisionId:
+          type: string
+        rolesAffected:
+          type: array
+          items:
+            type: object
+            properties:
+              roleName:
+                type: string
+              headcount:
+                type: integer
+              location:
+                type: string
+        retrainingProvision:
+          type: string
+        redeploymentProvision:
+          type: string
+        nonLinearCareerAssumption:
+          type: boolean
+    DisplacementPlan:
+      type: object
+      required: [id, decisionId, status]
+      properties:
+        id:
+          type: string
+        decisionId:
+          type: string
+        status:
+          type: string
+          enum: [draft, consultation, approved, announced]
+        rolesAffected:
+          type: array
+          items:
+            type: object
+            properties:
+              roleName:
+                type: string
+              headcount:
+                type: integer
+              location:
+                type: string
+        retrainingProvision:
+          type: string
+        redeploymentProvision:
+          type: string
+        preAnnouncementRestricted:
+          type: boolean
+    ConsultationRecord:
+      type: object
+      required: [bodyName, workforcePosition]
+      properties:
+        id:
+          type: string
+        planId:
+          type: string
+        bodyName:
+          type: string
+        workforcePosition:
+          type: string
+        decisionChangedAsResult:
+          type: boolean
+        completedAt:
+          type: string
+          format: date-time
+    DistributionalAssessment:
+      type: object
+      required: [decisionId, groupOutcomes]
+      properties:
+        id:
+          type: string
+        decisionId:
+          type: string
+        groupOutcomes:
+          type: array
+          items:
+            type: object
+            properties:
+              stakeholderGroupId:
+                type: string
+              benefitIncidence:
+                type: string
+                enum: [advantaged, proportional, left_behind]
+        correctiveCommitmentRequired:
+          type: boolean
+    AccessCommitment:
+      type: object
+      required: [decisionId, description, deliveryDate]
+      properties:
+        id:
+          type: string
+        decisionId:
+          type: string
+        description:
+          type: string
+        targetGroupId:
+          type: string
+        deliveryDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [committed, delivered, missed, withdrawn]
+        reasonedDecline:
+          type: string
+    PolicyPositionCreate:
+      type: object
+      required: [domain, statement, advocateId]
+      properties:
+        domain:
+          $ref: "#/components/schemas/ExposureDomain"
+        statement:
+          type: string
+        advocateId:
+          type: string
+    PolicyPosition:
+      type: object
+      required: [id, domain, statement, status]
+      properties:
+        id:
+          type: string
+        domain:
+          $ref: "#/components/schemas/ExposureDomain"
+        statement:
+          type: string
+        advocateId:
+          type: string
+        status:
+          type: string
+          enum: [active, superseded]
+        leadMatchTrail:
+          type: string
+          enum: [lead, match, trail]
+        adoptedAt:
+          type: string
+          format: date-time
+    RegulatoryLeadLagAssessment:
+      type: object
+      required: [assessment, evidence]
+      properties:
+        id:
+          type: string
+        positionId:
+          type: string
+        assessment:
+          type: string
+          enum: [lead, match, trail]
+        evidence:
+          type: string
+        assessedAt:
+          type: string
+          format: date-time
+    StakeholderEngagementCreate:
+      type: object
+      required: [category, participantsSummary, whatWasHeard]
+      properties:
+        category:
+          type: string
+          enum: [industry, consumers, government, academia, civil_society]
+        participantsSummary:
+          type: string
+        whatWasHeard:
+          type: string
+        relatedDecisionId:
+          type: string
+        relatedDomain:
+          $ref: "#/components/schemas/ExposureDomain"
+    StakeholderEngagement:
+      type: object
+      required: [id, category, heldAt]
+      properties:
+        id:
+          type: string
+        category:
+          type: string
+        participantsSummary:
+          type: string
+        whatWasHeard:
+          type: string
+        heldAt:
+          type: string
+          format: date-time
+        producedChange:
+          type: boolean
+    EngagementOutcome:
+      type: object
+      required: [whatChanged, producedChange]
+      properties:
+        id:
+          type: string
+        engagementId:
+          type: string
+        whatChanged:
+          type: string
+        producedChange:
+          type: boolean
+        decisionId:
+          type: string
+    ConscienceReportCreate:
+      type: object
+      required: [decisionId, allegation, implicatedLineIds]
+      properties:
+        decisionId:
+          type: string
+        allegation:
+          type: string
+        implicatedLineIds:
+          type: array
+          items:
+            type: string
+        anonymous:
+          type: boolean
+    ConscienceReport:
+      type: object
+      required: [id, decisionId, status]
+      properties:
+        id:
+          type: string
+        decisionId:
+          type: string
+        status:
+          type: string
+          enum: [received, routed, under_review, closed]
+        outcome:
+          type: string
+        reporterProtectionEvidenced:
+          type: boolean
+        receivedAt:
+          type: string
+          format: date-time
+    TrustMeasure:
+      type: object
+      required: [stakeholderGroupId, trustIndex]
+      properties:
+        id:
+          type: string
+        stakeholderGroupId:
+          type: string
+        trustIndex:
+          type: number
+          format: float
+        comprehensionIndex:
+          type: number
+          format: float
+        relatedDecisionIds:
+          type: array
+          items:
+            type: string
+        cycle:
+          type: string
+        capturedAt:
+          type: string
+          format: date-time
+    BoardDecisionRecordCreate:
+      type: object
+      required: [decisionId, positionTaken]
+      properties:
+        decisionId:
+          type: string
+        positionTaken:
+          type: string
+        alternativesConsideredSummary:
+          type: string
+        delegated:
+          type: boolean
+        meetingDate:
+          type: string
+          format: date
+    BoardDecisionRecord:
+      type: object
+      required: [id, decisionId, sequence, recordedAt]
+      properties:
+        id:
+          type: string
+        decisionId:
+          type: string
+        sequence:
+          type: integer
+        positionTaken:
+          type: string
+        alternativesConsideredSummary:
+          type: string
+        delegated:
+          type: boolean
+        ratified:
+          type: boolean
+        recordedAt:
+          type: string
+          format: date-time
+    DissentRecord:
+      type: object
+      required: [memberId, statement]
+      properties:
+        id:
+          type: string
+        boardRecordId:
+          type: string
+        memberId:
+          type: string
+        statement:
+          type: string
+        recordedAt:
+          type: string
+          format: date-time
+    DelegatedAuthority:
+      type: object
+      required: [delegateId, scope, ratificationMeetingDate]
+      properties:
+        id:
+          type: string
+        delegateId:
+          type: string
+        scope:
+          type: string
+        ratificationMeetingDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [active, ratified, overturned, expired]
+    DataEnvelopeTechnologyDecision:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/TechnologyDecision"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeTechnologyDecision:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/TechnologyDecision"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeMaterialityAssessment:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/MaterialityAssessment"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeMaterialityAssessment:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/MaterialityAssessment"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeDecisionOption:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/DecisionOption"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeDecisionOption:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/DecisionOption"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeHarmAssessment:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/HarmAssessment"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeHarmAssessment:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/HarmAssessment"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeHarmItem:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/HarmItem"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeHarmItem:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/HarmItem"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeMitigation:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/Mitigation"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeMitigation:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/Mitigation"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeHarmAcceptance:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/HarmAcceptance"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeHarmAcceptance:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/HarmAcceptance"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeExposureScore:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ExposureScore"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeExposureScore:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/ExposureScore"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeSacrificeLedgerEntry:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/SacrificeLedgerEntry"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeSacrificeLedgerEntry:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/SacrificeLedgerEntry"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeHorizonReview:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/HorizonReview"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeHorizonReview:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/HorizonReview"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeConsentAdequacyMeasure:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ConsentAdequacyMeasure"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeConsentAdequacyMeasure:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/ConsentAdequacyMeasure"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeUnconsentedUse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/UnconsentedUse"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeUnconsentedUse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/UnconsentedUse"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeDisplacementPlan:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/DisplacementPlan"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeDisplacementPlan:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/DisplacementPlan"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeConsultationRecord:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ConsultationRecord"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeConsultationRecord:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/ConsultationRecord"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeDistributionalAssessment:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/DistributionalAssessment"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeDistributionalAssessment:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/DistributionalAssessment"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeAccessCommitment:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/AccessCommitment"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeAccessCommitment:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/AccessCommitment"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopePolicyPosition:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/PolicyPosition"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopePolicyPosition:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/PolicyPosition"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeRegulatoryLeadLagAssessment:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/RegulatoryLeadLagAssessment"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeRegulatoryLeadLagAssessment:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/RegulatoryLeadLagAssessment"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeStakeholderEngagement:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/StakeholderEngagement"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeStakeholderEngagement:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/StakeholderEngagement"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeEngagementOutcome:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/EngagementOutcome"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeEngagementOutcome:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/EngagementOutcome"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeConscienceReport:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ConscienceReport"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeConscienceReport:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/ConscienceReport"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeTrustMeasure:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/TrustMeasure"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeTrustMeasure:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/TrustMeasure"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeBoardDecisionRecord:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/BoardDecisionRecord"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeBoardDecisionRecord:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/BoardDecisionRecord"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeDissentRecord:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/DissentRecord"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeDissentRecord:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/DissentRecord"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeDelegatedAuthority:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/DelegatedAuthority"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeDelegatedAuthority:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/DelegatedAuthority"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeStakeholderGroup:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/StakeholderGroup"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeStakeholderGroup:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/StakeholderGroup"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
